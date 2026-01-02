@@ -1,0 +1,31 @@
+game_id,title,singleplayer,multiplayer,story,competitive,rpg,shooter,open_world,casual,survival,image_url
+1,Witcher 3,5,0,5,1,5,0,5,1,0,https://steamcdn-a.akamaihd.net/steam/apps/292030/header.jpg
+2,Elden Ring,4,3,4,4,5,0,5,1,2,https://steamcdn-a.akamaihd.net/steam/apps/1245620/header.jpg
+3,Skyrim,5,1,4,1,5,0,5,2,1,https://steamcdn-a.akamaihd.net/steam/apps/72850/header.jpg
+4,Stardew Valley,5,3,4,0,4,0,2,5,1,https://steamcdn-a.akamaihd.net/steam/apps/413150/header.jpg
+5,Red Dead Redemption 2,5,2,5,1,3,2,5,1,1,https://steamcdn-a.akamaihd.net/steam/apps/1174180/header.jpg
+6,Dark Souls 3,4,2,3,4,5,0,3,1,1,https://steamcdn-a.akamaihd.net/steam/apps/374320/header.jpg
+7,Valorant,0,5,0,5,0,5,0,1,0,https://upload.wikimedia.org/wikipedia/en/thumb/b/ba/Valorant_cover.jpg/250px-Valorant_cover.jpg
+8,CS2,0,5,0,5,0,5,0,1,0,https://steamcdn-a.akamaihd.net/steam/apps/730/header.jpg
+9,Apex Legends,0,5,1,5,0,5,1,1,0,https://steamcdn-a.akamaihd.net/steam/apps/1172470/header.jpg
+10,Overwatch 2,0,5,2,5,0,5,0,2,0,https://steamcdn-a.akamaihd.net/steam/apps/2357570/header.jpg
+11,DOOM Eternal,5,1,2,3,0,5,0,1,0,https://steamcdn-a.akamaihd.net/steam/apps/782330/header.jpg
+12,Far Cry 5,4,2,3,2,2,4,4,2,1,https://steamcdn-a.akamaihd.net/steam/apps/552520/header.jpg
+13,The Forest,3,4,2,1,1,1,3,1,5,https://steamcdn-a.akamaihd.net/steam/apps/242760/header.jpg
+14,Minecraft,4,5,2,1,2,0,5,5,4,https://upload.wikimedia.org/wikipedia/en/thumb/b/b6/Minecraft_2024_cover_art.png/250px-Minecraft_2024_cover_art.png
+15,Terraria,4,4,2,1,3,0,3,4,3,https://steamcdn-a.akamaihd.net/steam/apps/105600/header.jpg
+16,Hades,5,0,3,2,4,0,0,2,0,https://steamcdn-a.akamaihd.net/steam/apps/1145360/header.jpg
+17,Cyberpunk 2077,5,1,4,1,4,2,4,1,0,https://steamcdn-a.akamaihd.net/steam/apps/1091500/header.jpg
+18,Baldur's Gate 3,5,3,5,1,5,0,2,1,0,https://steamcdn-a.akamaihd.net/steam/apps/1086940/header.jpg
+19,Among Us,0,5,1,2,0,0,0,5,0,https://steamcdn-a.akamaihd.net/steam/apps/945360/header.jpg
+20,Dead by Daylight,0,5,1,4,0,0,0,1,3,https://steamcdn-a.akamaihd.net/steam/apps/381210/header.jpg
+21,Subnautica,5,0,3,0,2,0,5,1,5,https://steamcdn-a.akamaihd.net/steam/apps/264710/header.jpg
+22,No Man's Sky,4,3,2,0,2,0,5,2,3,https://steamcdn-a.akamaihd.net/steam/apps/275850/header.jpg
+23,Rust,1,5,0,4,1,1,4,1,5,https://steamcdn-a.akamaihd.net/steam/apps/252490/header.jpg
+24,Left 4 Dead 2,1,5,1,3,0,5,0,2,2,https://steamcdn-a.akamaihd.net/steam/apps/550/header.jpg
+25,Hollow Knight,5,0,3,2,4,0,1,1,0,https://steamcdn-a.akamaihd.net/steam/apps/367520/header.jpg
+26,Assassin's Creed Valhalla,5,1,4,1,4,0,5,1,1,https://steamcdn-a.akamaihd.net/steam/apps/2208920/header.jpg
+27,Spider-Man,5,0,4,1,3,0,4,1,0,https://steamcdn-a.akamaihd.net/steam/apps/1817070/header.jpg
+28,God of War,5,0,5,1,4,0,3,1,0,https://steamcdn-a.akamaihd.net/steam/apps/1593500/header.jpg
+29,Horizon Zero Dawn,5,0,4,1,4,0,5,1,2,https://steamcdn-a.akamaihd.net/steam/apps/1151640/header.jpg
+30,The Last of Us Part II,5,0,5,1,3,2,2,1,0,https://steamcdn-a.akamaihd.net/steam/apps/883710/header.jpg
