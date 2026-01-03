@@ -28,7 +28,7 @@ export default function LoginRegister({ onLogin, onClose }) {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center">
       <div className="bg-white text-black p-6 rounded-lg max-w-md w-full mx-4">
-        <div className="flex mb-4">
+        <div className="flex mb-4 gap-2">
           <button
             onClick={() => setAccountMode("login")}
             className={`flex-1 py-2 ${accountMode === "login" ? "bg-red-600 text-white" : "bg-gray-200"} rounded-l`}
@@ -43,7 +43,7 @@ export default function LoginRegister({ onLogin, onClose }) {
           </button>
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleAccountSubmit}>
+        <form onSubmit={handleAccountSubmit} className="text-white">
           <input
             type="text"
             placeholder="Username"

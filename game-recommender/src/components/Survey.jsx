@@ -32,9 +32,9 @@ export default function Survey({ onSubmit }) {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-xl shadow-lg max-w-2xl mx-auto border border-blue-200">
-      <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">Rate Your Game Preferences</h2>
-      <p className="text-sm text-gray-600 mb-6 text-center">Slide the bars to indicate how much you like each type of game feature.</p>
+    <div className="bg-gradient-to-r from-purple-900 to-blue-900 p-8 rounded-xl shadow-lg max-w-2xl mx-auto outline outline-offset-4">
+      <h2 className="text-2xl font-bold mb-2 text-center text-white">Rate Your Game Preferences</h2>
+      <p className="text-sm text-white mb-6 text-center">Slide the bars to indicate how much you like each type of game feature.</p>
       <div className="space-y-6">
         {features.map(f => (
           <div key={f.key} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">

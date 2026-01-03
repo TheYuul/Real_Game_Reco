@@ -57,7 +57,7 @@ export default function GameCard({ game_id, title, score, image, feedback: initi
               </button>
               <button
                 onClick={handleCancel}
-                className="px-2 py-1 text-sm bg-gray-300 rounded"
+                className="px-2 py-1 text-sm bg-gray-400 rounded"
               >
                 Cancel
               </button>
@@ -66,7 +66,7 @@ export default function GameCard({ game_id, title, score, image, feedback: initi
             <button
               onClick={() => handleClick("like")}
               className={`px-2 py-1 text-sm rounded ${
-                feedback === "like" ? "bg-green-500 text-white" : "bg-gray-200"
+                feedback === "like" ? "bg-green-500 text-white" : "bg-gray-400"
               }`}
             >
               👍 {feedback === "like" ? "Liked ✓" : "Like"}
@@ -83,7 +83,7 @@ export default function GameCard({ game_id, title, score, image, feedback: initi
               </button>
               <button
                 onClick={handleCancel}
-                className="px-2 py-1 text-sm bg-gray-300 rounded"
+                className="px-2 py-1 text-sm bg-gray-400 rounded"
               >
                 Cancel
               </button>
@@ -92,7 +92,7 @@ export default function GameCard({ game_id, title, score, image, feedback: initi
             <button
               onClick={() => handleClick("dislike")}
               className={`px-2 py-1 text-sm rounded ${
-                feedback === "dislike" ? "bg-red-500 text-white" : "bg-gray-200"
+                feedback === "dislike" ? "bg-red-500 text-white" : "bg-gray-400"
               }`}
             >
               👎 {feedback === "dislike" ? "Disliked ✕" : "Dislike"}
