@@ -1,140 +1,144 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_bcrypt import Bcrypt
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
-import hashlib
 import os
 
 app = Flask(__name__)
 CORS(app)
+bcrypt = Bcrypt(app)
 
 # ---------------------------------------------------------
 # 1. LOAD DATASETS
 # ---------------------------------------------------------
-try:
-    # Core Identity
-    games_df = pd.read_csv("dataset/games.csv")
-    
-    # Content Features (Numeric)
-    features_df = pd.read_csv("dataset/game_features.csv")
-    
-    # Textual Content (Unstructured)
-    text_df = pd.read_csv("dataset/game_text.csv")
-    
-    # Metadata (Display Info)
-    metadata_df = pd.read_csv("dataset/game_metadata.csv")
-    
-    # User Interactions (Collaborative)
-    interactions_df = pd.read_csv("dataset/user_interactions.csv")
-    
-    # Accounts (for login)
+def load_data():
+    """Helper to load data with safe fallbacks"""
+    data = {}
     try:
-        users_accounts_df = pd.read_csv("dataset/users_accounts.csv")
-    except FileNotFoundError:
-        users_accounts_df = pd.DataFrame(columns=["username", "password_hash"])
+        # Core Identity
+        data["games"] = pd.read_csv("dataset/games.csv")
+        
+        # Content Features (Numeric)
+        data["features"] = pd.read_csv("dataset/game_features.csv")
+        
+        # Textual Content (Unstructured)
+        data["text"] = pd.read_csv("dataset/game_text.csv")
+        
+        # Metadata (Display Info)
+        data["metadata"] = pd.read_csv("dataset/game_metadata.csv")
+        
+        # User Interactions (Collaborative)
+        # Check for 'user_interactions.csv', fallback to 'ratings.csv' if needed, or empty
+        if os.path.exists("dataset/user_interactions.csv"):
+            data["interactions"] = pd.read_csv("dataset/user_interactions.csv")
+        elif os.path.exists("dataset/ratings.csv"):
+             # Migration fallback: read ratings and add playtime col
+            print("Migrating ratings.csv to user_interactions format...")
+            df = pd.read_csv("dataset/ratings.csv")
+            df["playtime"] = 0
+            data["interactions"] = df
+        else:
+             data["interactions"] = pd.DataFrame(columns=["user_id", "game_id", "rating", "playtime"])
 
-except FileNotFoundError as e:
-    print(f"CRITICAL ERROR: Missing CSV file: {e}")
-    # Initialize empties to prevent crash on boot, but app won't function correctly
-    games_df = pd.DataFrame(columns=["game_id", "title"])
-    features_df = pd.DataFrame()
-    text_df = pd.DataFrame()
-    metadata_df = pd.DataFrame()
-    interactions_df = pd.DataFrame(columns=["user_id", "game_id", "rating", "playtime"])
-    users_accounts_df = pd.DataFrame(columns=["username", "password_hash"])
+        # Accounts (for login)
+        if os.path.exists("dataset/users_accounts.csv"):
+            data["accounts"] = pd.read_csv("dataset/users_accounts.csv")
+        else:
+            data["accounts"] = pd.DataFrame(columns=["username", "password_hash"])
+
+    except Exception as e:
+        print(f"CRITICAL DATA LOAD ERROR: {e}")
+        # Initialize empties to prevent crash
+        data["games"] = pd.DataFrame(columns=["game_id", "title"])
+        data["features"] = pd.DataFrame()
+        data["text"] = pd.DataFrame()
+        data["metadata"] = pd.DataFrame()
+        data["interactions"] = pd.DataFrame(columns=["user_id", "game_id", "rating", "playtime"])
+        data["accounts"] = pd.DataFrame(columns=["username", "password_hash"])
+    
+    return data
+
+# Load Data Globally
+DB = load_data()
 
 # ---------------------------------------------------------
 # 2. PRE-COMPUTE SIMILARITY MATRICES
 # ---------------------------------------------------------
+def compute_matrices(db):
+    matrices = {}
+    
+    # A. Content Similarity (Numeric Features)
+    if not db["features"].empty:
+        feat_mat = db["features"].set_index("game_id").sort_index()
+        matrices["feature_matrix"] = feat_mat
+        matrices["content_sim"] = pd.DataFrame(
+            cosine_similarity(feat_mat), 
+            index=feat_mat.index, 
+            columns=feat_mat.index
+        )
+    
+    # B. Text Similarity (TF-IDF)
+    if not db["text"].empty:
+        tfidf = TfidfVectorizer(stop_words='english')
+        # Ensure alignment with game_id
+        text_sorted = db["text"].set_index("game_id").reindex(db["features"].set_index("game_id").index).fillna('')
+        tfidf_matrix = tfidf.fit_transform(text_sorted['description'])
+        matrices["text_sim"] = pd.DataFrame(
+            cosine_similarity(tfidf_matrix), 
+            index=text_sorted.index, 
+            columns=text_sorted.index
+        )
+    
+    return matrices
 
-# A. Content Similarity (Numeric Features)
-# Ensure alignment by game_id
-feature_matrix = features_df.set_index("game_id").sort_index()
-content_sim = cosine_similarity(feature_matrix)
-content_sim_df = pd.DataFrame(content_sim, index=feature_matrix.index, columns=feature_matrix.index)
-
-# B. Text Similarity (TF-IDF on Descriptions)
-tfidf = TfidfVectorizer(stop_words='english')
-# Fill NaNs with empty string
-text_df['description'] = text_df['description'].fillna('')
-# Sort to match index alignment
-text_sorted = text_df.set_index("game_id").reindex(feature_matrix.index).fillna('')
-tfidf_matrix = tfidf.fit_transform(text_sorted['description'])
-text_sim = cosine_similarity(tfidf_matrix)
-text_sim_df = pd.DataFrame(text_sim, index=feature_matrix.index, columns=feature_matrix.index)
-
-# C. Collaborative Similarity (User Ratings)
-# Pivot table: rows=users, cols=games
-if not interactions_df.empty:
-    user_game_matrix = interactions_df.pivot_table(
-        index="user_id", columns="game_id", values="rating"
-    ).fillna(0)
-    # Transpose to get game-game similarity
-    collab_sim = cosine_similarity(user_game_matrix.T)
-    collab_sim_df = pd.DataFrame(collab_sim, index=user_game_matrix.columns, columns=user_game_matrix.columns)
-else:
-    collab_sim_df = pd.DataFrame(index=feature_matrix.index, columns=feature_matrix.index).fillna(0)
+MATRICES = compute_matrices(DB)
 
 # ---------------------------------------------------------
-# 3. RECOMENDATION LOGIC
+# 3. RECOMMENDATION LOGIC
 # ---------------------------------------------------------
 
 def get_hybrid_scores(prefs, alpha=0.4, beta=0.4, gamma=0.2):
-    """
-    alpha: Weight for structured content (features)
-    beta:  Weight for collaborative filtering (ratings)
-    gamma: Weight for text similarity (description)
-    """
+    # 1. Content Score (User Preferences)
+    if "feature_matrix" not in MATRICES: return pd.Series()
     
-    # 1. Content Score (User preferences vs Game Features)
-    # Create a user profile vector from prefs
-    # We need to match columns of feature_matrix
-    feature_cols = feature_matrix.columns
-    user_profile = [prefs.get(col, 0) for col in feature_cols]
+    feat_mat = MATRICES["feature_matrix"]
+    user_profile = [prefs.get(col, 0) for col in feat_mat.columns]
     
-    # Calculate similarity between User Profile and All Games
-    content_scores = cosine_similarity([user_profile], feature_matrix)[0]
-    content_scores_series = pd.Series(content_scores, index=feature_matrix.index)
+    content_scores = cosine_similarity([user_profile], feat_mat)[0]
+    content_series = pd.Series(content_scores, index=feat_mat.index)
 
-    # 2. Collaborative Score (Item-Item similarity based on what they might like)
-    # Since we don't have a history for the *current* session user in the simplified flow,
-    # we usually just rely on Content + Text for Cold Start.
-    # However, if we assume 'prefs' are derived from high-rated games, we could use that.
-    # For this implementation, we will mock it: Collaborative score is weak for cold-start (0)
-    # UNLESS we find games similar to high-rated features. 
-    # To keep it simple and robust: Default to 0 if no specific game history is passed.
-    collab_scores_series = pd.Series(0, index=feature_matrix.index)
+    # 2. Collaborative Score (Popularity/History)
+    # Simple logic: Use average rating as a baseline for "Quality"
+    collab_series = pd.Series(0, index=feat_mat.index)
+    if not DB["interactions"].empty:
+        avg_ratings = DB["interactions"].groupby("game_id")["rating"].mean()
+        # Normalize to 0-1
+        if avg_ratings.max() > 0:
+            avg_ratings = avg_ratings / 5.0
+        collab_series = avg_ratings.reindex(feat_mat.index).fillna(0)
+
+    # 3. Text Score (Contextual Similarity)
+    # Find the game closest to the user's numeric preferences, then find text-similar games
+    text_series = pd.Series(0, index=feat_mat.index)
+    if "text_sim" in MATRICES:
+        best_match_id = content_series.idxmax()
+        if best_match_id in MATRICES["text_sim"].index:
+            text_series = MATRICES["text_sim"][best_match_id]
+
+    # Weighted Sum
+    final_scores = (alpha * content_series) + (beta * collab_series) + (gamma * text_series)
     
-    # If we wanted to use collab_sim_df, we would look at games the user ALREADY rated.
-    # But here 'prefs' is just a dict of categories. 
-    # So we stick to Content/Text mostly, but we can mix in global popularity from interactions?
-    # Let's add a "Popularity Boost" into the collaborative slot for cold start.
-    if not interactions_df.empty:
-        avg_ratings = interactions_df.groupby("game_id")["rating"].mean()
-        collab_scores_series = avg_ratings.reindex(feature_matrix.index).fillna(0)
-        # Normalize
-        if collab_scores_series.max() > 0:
-            collab_scores_series = collab_scores_series / 5.0 # Assuming 5 star scale
-
-    # 3. Text Score (Text description similarity)
-    # Similar to content, but harder to match "preferences" to text without a query.
-    # We will use the CONTENT profile to find the "Ideal Game" then find text similarity to THAT.
-    # Find the game_id that matches the numeric content profile best
-    best_match_id = content_scores_series.idxmax()
-    # Get text similarity of all games to this "best match" game
-    text_scores_series = text_sim_df[best_match_id]
-
-    # Combine
-    final_scores = (alpha * content_scores_series) + \
-                   (beta * collab_scores_series) + \
-                   (gamma * text_scores_series)
-
-    # Normalize final
+    # Normalize
     if final_scores.max() != final_scores.min():
         final_scores = (final_scores - final_scores.min()) / (final_scores.max() - final_scores.min())
-    
+        
     return final_scores.sort_values(ascending=False).head(10)
+
+# ---------------------------------------------------------
+# 4. API ROUTES
+# ---------------------------------------------------------
 
 @app.route("/recommend", methods=["POST"])
 def recommend():
@@ -144,57 +148,48 @@ def recommend():
 
     scores = get_hybrid_scores(prefs)
     
-    # Features list for explanation
-    feature_list = features_df.columns.tolist() # ["singleplayer", "multiplayer", ...]
-
     recommended_games = []
+    feature_list = DB["features"].columns.tolist() if not DB["features"].empty else []
+
     for game_id in scores.index:
-        # Get data from core table
-        core_row = games_df[games_df["game_id"] == game_id]
-        if core_row.empty: continue
-        title = core_row["title"].values[0]
-        score = float(scores[game_id])
-
-        # Get metadata
-        meta_row = metadata_df[metadata_df["game_id"] == game_id]
-        image = meta_row["image_url"].values[0] if not meta_row.empty else ""
+        # Get Core Info
+        core = DB["games"][DB["games"]["game_id"] == game_id]
+        if core.empty: continue
         
-        # Get description
-        txt_row = text_df[text_df["game_id"] == game_id]
-        desc = txt_row["description"].values[0] if not txt_row.empty else ""
+        # Get Metadata
+        meta = DB["metadata"][DB["metadata"]["game_id"] == game_id]
+        
+        # Get Description
+        txt = DB["text"][DB["text"]["game_id"] == game_id]
 
-        # Explanation logic
-        game_feat_row = features_df[features_df["game_id"] == game_id]
+        # Explain
+        game_feats = DB["features"][DB["features"]["game_id"] == game_id]
         explanations = []
         for feat in feature_list:
-            # If user likes it (>=4) and game has it (>=4)
-            val = game_feat_row[feat].values[0] if not game_feat_row.empty else 0
-            if prefs.get(feat, 0) >= 4 and val >= 1: # Adjusted threshold for binary/numeric
+            if not game_feats.empty and prefs.get(feat, 0) >= 4 and game_feats[feat].values[0] >= 1:
                 explanations.append(feat.replace("_", " "))
         
-        expl_text = f"Matches your interest in {', '.join(explanations)}." if explanations else "Recommended based on popularity and text analysis."
+        expl_text = f"Matches your interest in {', '.join(explanations)}." if explanations else "Recommended based on popularity and analysis."
 
         recommended_games.append({
             "game_id": int(game_id),
-            "title": title,
-            "score": score,
-            "image": image,
-            "description": desc,
-            "explanation": expl_text
+            "title": core["title"].values[0],
+            "score": float(scores[game_id]),
+            "image": meta["image_url"].values[0] if not meta.empty else "",
+            "description": txt["description"].values[0] if not txt.empty else "",
+            "explanation": expl_text,
+            "rating": None # Placeholder
         })
 
-    # Add existing user rating if available
-    for rec in recommended_games:
-        mask = (interactions_df["user_id"] == user_id) & (interactions_df["game_id"] == rec["game_id"])
-        if mask.any():
-            rec["rating"] = int(interactions_df.loc[mask, "rating"].values[0])
-        else:
-            rec["rating"] = None
+    # Attach User Ratings
+    if user_id:
+        user_ratings = DB["interactions"][DB["interactions"]["user_id"] == user_id]
+        for rec in recommended_games:
+            r = user_ratings[user_ratings["game_id"] == rec["game_id"]]
+            if not r.empty:
+                rec["rating"] = int(r["rating"].values[0])
 
-    return jsonify({
-        "user": user_id,
-        "recommendations": recommended_games
-    })
+    return jsonify({"user": user_id, "recommendations": recommended_games})
 
 @app.route("/rate", methods=["POST"])
 def rate_game():
@@ -202,53 +197,35 @@ def rate_game():
     user_id = data.get("user_id")
     game_id = data.get("game_id")
     rating = data.get("rating")
-    
-    # Default playtime to 0 for new ratings via web UI
     playtime = data.get("playtime", 0)
 
-    if not user_id or not game_id or not rating:
+    if not all([user_id, game_id, rating]):
         return jsonify({"error": "Missing data"}), 400
 
-    interactions_path = "dataset/user_interactions.csv"
+    # Load fresh to avoid overwriting concurrency (simplified)
+    current_interactions = pd.read_csv("dataset/user_interactions.csv")
     
-    # Reload to be safe
-    try:
-        current_interactions = pd.read_csv(interactions_path)
-    except FileNotFoundError:
-        current_interactions = pd.DataFrame(columns=["user_id", "game_id", "rating", "playtime"])
-
-    # Check update or insert
     mask = (current_interactions["user_id"] == user_id) & (current_interactions["game_id"] == game_id)
     if mask.any():
         current_interactions.loc[mask, "rating"] = rating
-        # Don't overwrite playtime if it exists, unless provided
-        if playtime > 0:
-             current_interactions.loc[mask, "playtime"] = playtime
+        if playtime > 0: current_interactions.loc[mask, "playtime"] = playtime
     else:
-        new_row = pd.DataFrame([{
-            "user_id": user_id,
-            "game_id": game_id,
-            "rating": rating,
-            "playtime": playtime
-        }])
+        new_row = pd.DataFrame([{"user_id": user_id, "game_id": game_id, "rating": rating, "playtime": playtime}])
         current_interactions = pd.concat([current_interactions, new_row], ignore_index=True)
 
-    current_interactions.to_csv(interactions_path, index=False)
+    current_interactions.to_csv("dataset/user_interactions.csv", index=False)
     
-    # Refresh global dataframe in memory (simple reload for this scale)
-    global interactions_df
-    interactions_df = current_interactions
-
-    return jsonify({"message": "Rating saved successfully"})
+    # Update global DB (Simplified for this project)
+    DB["interactions"] = current_interactions
+    
+    return jsonify({"message": "Rating saved"})
 
 @app.route("/games")
 def get_games():
-    # Merge for complete view
-    merged = games_df.merge(metadata_df, on="game_id", how="left")
-    games_list = merged.to_dict('records')
-    return jsonify(games_list)
+    # Merge games + metadata for the catalog view
+    merged = DB["games"].merge(DB["metadata"], on="game_id", how="left")
+    return jsonify(merged.to_dict('records'))
 
-# Login/Register routes remain mostly the same, just checking user_accounts.csv
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
@@ -256,23 +233,26 @@ def register():
     password = data.get("password")
 
     if not username or not password:
-        return jsonify({"error": "Username and password required"}), 400
+        return jsonify({"error": "Required fields missing"}), 400
 
-    users_path = "dataset/users_accounts.csv"
+    # Reload accounts to check duplicates
     try:
-        users_df = pd.read_csv(users_path)
-    except FileNotFoundError:
+        users_df = pd.read_csv("dataset/users_accounts.csv")
+    except:
         users_df = pd.DataFrame(columns=["username", "password_hash"])
 
     if username in users_df["username"].values:
-        return jsonify({"error": "Username already exists"}), 400
+        return jsonify({"error": "Username exists"}), 400
 
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    new_user = pd.DataFrame([{"username": username, "password_hash": password_hash}])
+    # SECURE HASHING
+    pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+    
+    new_user = pd.DataFrame([{"username": username, "password_hash": pw_hash}])
     users_df = pd.concat([users_df, new_user], ignore_index=True)
-    users_df.to_csv(users_path, index=False)
-
-    return jsonify({"message": "Registration successful"})
+    users_df.to_csv("dataset/users_accounts.csv", index=False)
+    
+    DB["accounts"] = users_df # Update memory
+    return jsonify({"message": "Registered successfully"})
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -280,21 +260,19 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    if not username or not password:
-        return jsonify({"error": "Username and password required"}), 400
-
-    users_path = "dataset/users_accounts.csv"
+    # Reload accounts
     try:
-        users_df = pd.read_csv(users_path)
-    except FileNotFoundError:
+        users_df = pd.read_csv("dataset/users_accounts.csv")
+    except:
+        return jsonify({"error": "No users found"}), 401
+
+    user = users_df[users_df["username"] == username]
+    if user.empty:
         return jsonify({"error": "Invalid credentials"}), 401
 
-    user_row = users_df[users_df["username"] == username]
-    if user_row.empty:
-        return jsonify({"error": "Invalid credentials"}), 401
-
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    if user_row["password_hash"].values[0] != password_hash:
+    # SECURE CHECK
+    stored_hash = user["password_hash"].values[0]
+    if not bcrypt.check_password_hash(stored_hash, password):
         return jsonify({"error": "Invalid credentials"}), 401
 
     return jsonify({"message": "Login successful", "username": username})

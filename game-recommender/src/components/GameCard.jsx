@@ -31,7 +31,7 @@ export default function GameCard({ game_id, title, score, image, feedback: initi
 
   return (
     <div className="flex flex-col bg-gray-50 p-6 rounded shadow-sm min-h-80">
-      <div className="w-82 h-30 mb-3 mx-auto overflow-hidden rounded">
+      <div className="w-82 h-[250px] mb-3 mx-auto overflow-hidden rounded">
         {image ? (
           <img src={image} alt={title} className="w-full h-full object-cover" />
         ) : (

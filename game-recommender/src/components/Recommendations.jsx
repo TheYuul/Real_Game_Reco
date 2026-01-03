@@ -14,7 +14,7 @@ export default function Recommendations({ games, user, feedback, handleRate, onG
   };
 
   return (
-    <div className="relative mt-8 max-w-lg mx-auto bg-gradient-to-r from-purple-900 to-blue-900 p-6 pb-20 rounded shadow-md space-y-3">
+    <div className="relative mt-8 max-w-2xl mx-auto bg-gradient-to-r from-purple-900 to-blue-900 p-6 pb-20 rounded shadow-md space-y-3">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-white text-xl font-semibold">Recommended Games</h2>
         <button
