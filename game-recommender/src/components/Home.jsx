@@ -113,24 +113,24 @@ export default function Home({ onStartSurvey, user, onLogout, onLogin }) {
       {/* Games Grid */}
       <section className="p-6">
         <h3 className="text-2xl font-bold mb-6">All Games</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {filteredGames.map(game => (
             <div
               key={game.game_id}
               className="bg-gray-800 rounded-lg overflow-hidden hover:scale-105 transition-transform cursor-pointer group"
             >
-              <div className="aspect-[3/4] overflow-hidden">
+              <div className="overflow-hidden">
                 <img
                   src={game.image_url}
                   alt={game.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                  className="w-full h-[230px] object-cover group-hover:scale-110 transition-transform"
                   onError={(e) => {
                     e.target.src = "https://placehold.co/300x400/666/fff?text=No+Image";
                   }}
                 />
               </div>
               <div className="p-3">
-                <h4 className="font-semibold text-sm truncate">{game.title}</h4>
+                <h4 className="text-[16px] font-semibold text-sm truncate">{game.title}</h4>
               </div>
             </div>
           ))}

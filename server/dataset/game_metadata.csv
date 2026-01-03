@@ -1,0 +1,31 @@
+game_id,release_date,platform,publisher,developer,image_url
+1,2015-05-19,PC;Console,CD Projekt,CD Projekt Red,https://steamcdn-a.akamaihd.net/steam/apps/292030/header.jpg
+2,2022-02-25,PC;Console,Bandai Namco,FromSoftware,https://steamcdn-a.akamaihd.net/steam/apps/1245620/header.jpg
+3,2011-11-11,PC;Console,Bethesda Softworks,Bethesda Game Studios,https://steamcdn-a.akamaihd.net/steam/apps/72850/header.jpg
+4,2016-02-26,PC;Console;Mobile,ConcernedApe,ConcernedApe,https://steamcdn-a.akamaihd.net/steam/apps/413150/header.jpg
+5,2018-10-26,PC;Console,Rockstar Games,Rockstar Studios,https://steamcdn-a.akamaihd.net/steam/apps/1174180/header.jpg
+6,2016-03-24,PC;Console,Bandai Namco,FromSoftware,https://steamcdn-a.akamaihd.net/steam/apps/374320/header.jpg
+7,2020-06-02,PC;Console,Riot Games,Riot Games,https://upload.wikimedia.org/wikipedia/en/thumb/b/ba/Valorant_cover.jpg/250px-Valorant_cover.jpg
+8,2023-09-27,PC,Valve,Valve,https://steamcdn-a.akamaihd.net/steam/apps/730/header.jpg
+9,2019-02-04,PC;Console,Electronic Arts,Respawn Entertainment,https://steamcdn-a.akamaihd.net/steam/apps/1172470/header.jpg
+10,2022-10-04,PC;Console,Blizzard Entertainment,Blizzard Entertainment,https://steamcdn-a.akamaihd.net/steam/apps/2357570/header.jpg
+11,2020-03-20,PC;Console,Bethesda Softworks,id Software,https://steamcdn-a.akamaihd.net/steam/apps/782330/header.jpg
+12,2018-03-27,PC;Console,Ubisoft,Ubisoft Montreal,https://steamcdn-a.akamaihd.net/steam/apps/552520/header.jpg
+13,2018-04-30,PC;Console,Endnight Games,Endnight Games,https://steamcdn-a.akamaihd.net/steam/apps/242760/header.jpg
+14,2011-11-18,PC;Console;Mobile,Xbox Game Studios,Mojang Studios,https://upload.wikimedia.org/wikipedia/en/thumb/b/b6/Minecraft_2024_cover_art.png/250px-Minecraft_2024_cover_art.png
+15,2011-05-16,PC;Console;Mobile,Re-Logic,Re-Logic,https://steamcdn-a.akamaihd.net/steam/apps/105600/header.jpg
+16,2020-09-17,PC;Console;Mobile,Supergiant Games,Supergiant Games,https://steamcdn-a.akamaihd.net/steam/apps/1145360/header.jpg
+17,2020-12-10,PC;Console,CD Projekt,CD Projekt Red,https://steamcdn-a.akamaihd.net/steam/apps/1091500/header.jpg
+18,2023-08-03,PC;Console,Larian Studios,Larian Studios,https://steamcdn-a.akamaihd.net/steam/apps/1086940/header.jpg
+19,2018-06-15,PC;Console;Mobile,Innersloth,Innersloth,https://steamcdn-a.akamaihd.net/steam/apps/945360/header.jpg
+20,2016-06-14,PC;Console;Mobile,Behaviour Interactive,Behaviour Interactive,https://steamcdn-a.akamaihd.net/steam/apps/381210/header.jpg
+21,2018-01-23,PC;Console,Unknown Worlds Entertainment,Unknown Worlds Entertainment,https://steamcdn-a.akamaihd.net/steam/apps/264710/header.jpg
+22,2016-08-09,PC;Console,Hello Games,Hello Games,https://steamcdn-a.akamaihd.net/steam/apps/275850/header.jpg
+23,2018-02-08,PC;Console,Facepunch Studios,Facepunch Studios,https://steamcdn-a.akamaihd.net/steam/apps/252490/header.jpg
+24,2009-11-17,PC;Console,Valve,Valve,https://steamcdn-a.akamaihd.net/steam/apps/550/header.jpg
+25,2017-02-24,PC;Console,Team Cherry,Team Cherry,https://steamcdn-a.akamaihd.net/steam/apps/367520/header.jpg
+26,2020-11-10,PC;Console,Ubisoft,Ubisoft Montreal,https://steamcdn-a.akamaihd.net/steam/apps/2208920/header.jpg
+27,2018-09-07,PC;Console,Sony Interactive Entertainment,Insomniac Games,https://steamcdn-a.akamaihd.net/steam/apps/1817070/header.jpg
+28,2018-04-20,PC;Console,Sony Interactive Entertainment,Santa Monica Studio,https://steamcdn-a.akamaihd.net/steam/apps/1593500/header.jpg
+29,2017-02-28,PC;Console,Sony Interactive Entertainment,Guerrilla Games,https://steamcdn-a.akamaihd.net/steam/apps/1151640/header.jpg
+30,2020-06-19,PC;Console,Sony Interactive Entertainment,Naughty Dog,https://steamcdn-a.akamaihd.net/steam/apps/883710/header.jpg
