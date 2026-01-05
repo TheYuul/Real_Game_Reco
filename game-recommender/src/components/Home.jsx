@@ -378,6 +378,13 @@ export default function Home({ user, onLogout, onLogin }) {
                 </div>
 
                 <Link
+                  to="/profile"
+                  className="block w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold transition mb-3 text-center"
+                >
+                  ⚙️ Manage Preferences
+                </Link>
+
+                <Link
                   to="/library"
                   className="block w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition mb-3 text-center"
                 >

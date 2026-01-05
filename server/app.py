@@ -829,5 +829,60 @@ def get_user_library(user_id):
         print(f"ERROR: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/user/preferences/<user_id>", methods=["GET"])
+def get_user_prefs(user_id):
+    prefs_path = "dataset/user_preferences.csv"
+    if not os.path.exists(prefs_path):
+        return jsonify({"genres": [], "platforms": [], "modes": []})
+    
+    df = pd.read_csv(prefs_path)
+    user_pref = df[df["user_id"].astype(str) == str(user_id)]
+    
+    if user_pref.empty:
+        return jsonify({"genres": [], "platforms": [], "modes": []})
+    
+    # Convert semicolon strings back to lists for the frontend
+    res = {
+        "genres": str(user_pref.iloc[0]['genres']).split(";") if pd.notna(user_pref.iloc[0]['genres']) else [],
+        "platforms": str(user_pref.iloc[0]['platforms']).split(";") if pd.notna(user_pref.iloc[0]['platforms']) else [],
+        "modes": str(user_pref.iloc[0]['modes']).split(";") if pd.notna(user_pref.iloc[0]['modes']) else []
+    }
+    return jsonify(res)
+
+@app.route("/user/stats/<user_id>", methods=["GET"])
+def get_user_stats(user_id):
+    # 1. Load data
+    interactions = safe_read_csv("dataset/user_interactions.csv", ["user_id", "game_id", "rating", "implicit"])
+    user_data = interactions[interactions["user_id"].astype(str) == str(user_id)]
+    
+    if user_data.empty:
+        return jsonify({"accuracy": 0, "top_genres": []})
+
+    # 2. Calculate "Match Accuracy"
+    # Logic: How many 'Highly Rated' (4-5) games vs 'Disliked' (1-2)
+    likes = len(user_data[user_data["rating"] >= 4])
+    total = len(user_data)
+    accuracy = int((likes / total) * 100) if total > 0 else 0
+
+    # 3. Calculate Genre Distribution (Top 5)
+    # Join with features to see which genres these games belong to
+    merged = user_data.merge(DB["features"], on="game_id")
+    genre_cols = ["rpg", "shooter", "survival", "competitive", "open_world", "casual"]
+    
+    genre_scores = {}
+    for col in genre_cols:
+        # Sum of feature strengths for games the user liked
+        score = merged[merged["rating"] >= 4][col].sum()
+        if score > 0:
+            genre_scores[col.replace("_", " ").title()] = int(score)
+
+    # Sort and take top 5
+    sorted_genres = sorted(genre_scores.items(), key=lambda x: x[1], reverse=True)[:5]
+    
+    return jsonify({
+        "accuracy": accuracy,
+        "genre_data": [{"name": k, "value": v} for k, v in sorted_genres]
+    })
+
 if __name__ == "__main__":
     app.run(debug=True)

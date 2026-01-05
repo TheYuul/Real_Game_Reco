@@ -5,6 +5,7 @@ import Survey from "./components/Survey";
 import Recommendations from "./components/Recommendations";
 import History from "./components/History";
 import MyLibrary from "./components/MyLibrary";
+import Profile from "./components/Profile";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -45,6 +46,9 @@ function App() {
 
         <Route path="/library" 
         element={<MyLibrary user={user} />} />
+
+        <Route path="/profile" 
+        element={<Profile user={user} />} />
 
         {/* Catch-all: Redirect to Home */}
         <Route path="*" element={<Navigate to="/" replace />} />
